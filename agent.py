@@ -5,6 +5,9 @@ from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import InMemorySaver
 
+import re
+from pathlib import Path
+
 CHAT_MODEL = "qwen3.5:4b"   # Ollama chat model. Must support tool calling.
 
 SYSTEM_PROMPT = (
@@ -12,6 +15,8 @@ SYSTEM_PROMPT = (
     "Use tools when the user's request needs one. "
     "If the question doesn't need a tool, answer directly. "
     "If a tool returns an error, explain the error plainly."
+    "You can get the local time, count words, and save or read local notes. "
+    "Save notes only when explicitly requested and retrieve saved notes by name. "
 )
 
 # ----- Tools -----
@@ -32,8 +37,43 @@ def word_count(text: str) -> int:
     return len(text.split())
 
 
-TOOLS = [current_time, word_count]
+#TOOLS = [current_time, word_count]
+NOTES_DIR = Path(__file__).resolve().parent / "notes"
 
+
+def note_path(name: str) -> Path:
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,40}", name):
+        raise ValueError("Use 1 to 40 letters, digits, hyphens, or underscores.")
+    return NOTES_DIR / f"note-{name.lower()}.txt"
+
+
+@tool
+def save_note(name: str, text: str) -> str:
+    """Save a new local note when the user explicitly asks to save one."""
+    try:
+        path = note_path(name)
+        NOTES_DIR.mkdir(exist_ok=True)
+        with path.open("x", encoding="utf-8") as note:
+            note.write(text)
+    except FileExistsError:
+        return f"A note named {name!r} already exists."
+    except (ValueError, OSError) as error:
+        return f"Could not save the note: {error}"
+    return f"Saved note {name!r}."
+
+
+@tool
+def read_note(name: str) -> str:
+    """Read a previously saved local note by name."""
+    try:
+        return note_path(name).read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return f"No saved note named {name!r} was found."
+    except (ValueError, OSError) as error:
+        return f"Could not read the note: {error}"
+
+
+TOOLS = [current_time, word_count, save_note, read_note]
 
 # ----- Agent -----
 
