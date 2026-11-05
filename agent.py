@@ -11,12 +11,16 @@ from pathlib import Path
 CHAT_MODEL = "qwen3.5:4b"   # Ollama chat model. Must support tool calling.
 
 SYSTEM_PROMPT = (
-    "You are a helpful assistant with access to tools for getting the current time and counting words in text. "
-    "Use tools when the user's request needs one. "
+    "You are a helpful local assistant. "
+    "Use current_time for requests about the current local date or time. "
+    "Use word_count for word counts and character_count for character counts. "
+    "Character counts include spaces and punctuation. "
+    "If the user asks for the length of text without specifying a unit, "
+    "ask whether they mean words or characters before calling a counting tool. "
+    "Use save_note only when the user explicitly asks to save a note. "
+    "Use read_note when the user asks to retrieve a saved note by name. "
     "If the question doesn't need a tool, answer directly. "
-    "If a tool returns an error, explain the error plainly."
-    "You can get the local time, count words, and save or read local notes. "
-    "Save notes only when explicitly requested and retrieve saved notes by name. "
+    "If a tool returns an error, explain it plainly."
 )
 
 # ----- Tools -----
@@ -29,15 +33,15 @@ def current_time() -> str:
 
 @tool
 def word_count(text: str) -> int:
-    """Count the number of words in a piece of text.
-    Use this when the user asks how long a piece of writing is,
-    or asks you to count the words in something they've shared.
-    Returns the word count as an integer.
-    """
+    """Count whitespace-separated words in text. Use for word-count requests."""
     return len(text.split())
 
+@tool
+def character_count(text: str) -> int:
+    """Count characters in text, including spaces and punctuation."""
+    return len(text)
 
-#TOOLS = [current_time, word_count]
+
 NOTES_DIR = Path(__file__).resolve().parent / "notes"
 
 
@@ -73,7 +77,7 @@ def read_note(name: str) -> str:
         return f"Could not read the note: {error}"
 
 
-TOOLS = [current_time, word_count, save_note, read_note]
+TOOLS = [current_time, word_count, character_count, save_note, read_note]
 
 # ----- Agent -----
 
