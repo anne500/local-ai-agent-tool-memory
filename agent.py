@@ -7,6 +7,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 import re
 from pathlib import Path
+import sqlite3
 
 CHAT_MODEL = "qwen3.5:4b"   # Ollama chat model. Must support tool calling.
 
@@ -21,6 +22,10 @@ SYSTEM_PROMPT = (
     "Use read_note when the user asks to retrieve a saved note by name. "
     "If the question doesn't need a tool, answer directly. "
     "If a tool returns an error, explain it plainly."
+    "Use remember_fact only when the user explicitly asks you to remember a fact. "
+    "Use recall_fact to look up previously saved facts when the user asks about them. "
+    "Use the same key for saving and recalling. For the user's demo project name, "
+    "always use the key demo_project_name. "
 )
 
 # ----- Tools -----
@@ -76,9 +81,67 @@ def read_note(name: str) -> str:
     except (ValueError, OSError) as error:
         return f"Could not read the note: {error}"
 
+FACTS_DB = Path(__file__).resolve().parent / "facts.sqlite3"
 
-TOOLS = [current_time, word_count, character_count, save_note, read_note]
 
+@tool
+def remember_fact(key: str, value: str) -> str:
+    """Save or update a fact the user explicitly asks you to remember."""
+    key = key.strip().lower()
+    value = value.strip()
+    if not key or not value:
+        return "A fact needs both a key and a value."
+
+    try:
+        with sqlite3.connect(FACTS_DB, autocommit=False) as db:
+            db.execute(
+                "CREATE TABLE IF NOT EXISTS facts "
+                "(key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+            )
+            db.execute(
+                "INSERT INTO facts (key, value) VALUES (?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (key, value),
+            )
+    except sqlite3.Error:
+        return "Could not save the fact to the local database."
+    finally:
+        if "db" in locals():
+            db.close()
+
+    return f"Remembered {key!r}."
+
+
+@tool
+def recall_fact(key: str) -> str:
+    """Look up a saved fact by key, such as demo_project_name."""
+    key = key.strip().lower()
+    if not FACTS_DB.exists():
+        return f"No saved fact found for {key!r}."
+
+    try:
+        with sqlite3.connect(FACTS_DB) as db:
+            row = db.execute(
+                "SELECT value FROM facts WHERE key = ?", (key,)
+            ).fetchone()
+    except sqlite3.Error:
+        return "Could not read the local facts database."
+    finally:
+        if "db" in locals():
+            db.close()
+
+    return row[0] if row else f"No saved fact found for {key!r}."
+
+#TOOLS = [current_time, word_count, character_count, save_note, read_note]
+TOOLS = [
+    current_time,
+    word_count,
+    character_count,
+    save_note,
+    read_note,
+    remember_fact,
+    recall_fact,
+]
 # ----- Agent -----
 
 def build_agent():
