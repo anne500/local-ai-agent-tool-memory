@@ -1,12 +1,36 @@
-﻿# Local AI Agent with Tool Calling and Memory
+﻿# 🤖 Local AI Agent with Tool Calling and Memory
 
-A Python command-line agent running Qwen 3.5 4B locally through Ollama,
-with LangChain tool calling and three forms of memory.
+![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-Local%20Inference-222222)
+![Qwen](https://img.shields.io/badge/Qwen-3.5%204B-7C3AED)
+![SQLite](https://img.shields.io/badge/SQLite-Durable%20Memory-003B57?logo=sqlite&logoColor=white)
 
-Built from Darsh Shah's freeCodeCamp tutorial and extended with local
-note storage, character counting, clarification behavior, and SQLite fact memory.
+A Python command-line agent that runs Qwen locally through Ollama,
+selects tools, asks clarifying questions, and retrieves saved information
+across restarts.
 
-## Features
+Built from Darsh Shah's freeCodeCamp tutorial and extended with note storage,
+note discovery, character counting, and SQLite fact memory.
+
+| 🟦 Learn AI | 🟩 Explore the implementation | 🟪 Inspect the evidence |
+| --- | --- | --- |
+| Tool calling and clarification | Eight Python tools | Visible tool-call traces |
+| Conversation state | InMemorySaver | Follow-up questions |
+| Persistent storage | Local notes and SQLite | Retrieval after restarting |
+
+## 🧭 Architecture
+
+```mermaid
+flowchart TD
+    U["💬 User request"] --> A["🤖 LangChain agent + local Qwen"]
+    A --> T["🛠️ Time and counting tools"]
+    A --> N["📝 Note tools"]
+    A --> F["🧠 Fact tools"]
+    A <--> S["💬 Session history"]
+    N <--> D["📁 Local text files"]
+    F <--> Q["🗃️ SQLite database"]
+```
+## ✨ Features
 
 | Capability | Implementation |
 | --- | --- |
@@ -15,10 +39,11 @@ note storage, character counting, clarification behavior, and SQLite fact memory
 | Word counting | word_count |
 | Character counting | character_count, including spaces and punctuation |
 | Local notes | save_note and read_note |
+| Note discovery | list_notes |
 | Session memory | LangGraph InMemorySaver |
 | Durable fact memory | remember_fact and recall_fact with SQLite |
 
-## Windows PowerShell setup
+## 🚀 Windows PowerShell setup
 
 Install Python 3.14 and Ollama, then run:
 
@@ -37,7 +62,7 @@ Type exit to end a session.
 Development environment used Python 3.14.4 on Windows.
 requirements.txt captures the installed Python package versions.
 
-## Verified demonstrations
+## 🧪 Verified demonstrations
 
 ### Tutorial baseline
 
@@ -96,7 +121,7 @@ You: What is my demo project called?
 
 The agent answered Cedar.
 
-## Memory behavior
+## 🧠 Memory behavior
 
 Session history lasts while the Python process runs.
 Notes persist as text files in notes/.
@@ -108,14 +133,14 @@ for the demonstrated project-name example.
 The virtual environment, Python cache, notes, facts database, and recovery
 backup are excluded from Git.
 
-## Scope and limitations
+## 📋 Scope and limitations
 
 These demonstrations are manual functional checks.
 Tool selection and arguments depend on the local model.
 Character counting uses Python len(), which counts Unicode code points.
 The CLI currently uses a single conversation thread and a shared local fact store.
 
-## Tutorial and attribution
+## 📚 Tutorial and attribution
 
 The starting point is Darsh Shah's tutorial,
 [How to Build Your Own Local AI Agent with Tool Calling and Memory](https://www.freecodecamp.org/news/how-to-build-your-own-local-ai-agent-with-tool-calling-and-memory/).

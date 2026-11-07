@@ -22,6 +22,7 @@ SYSTEM_PROMPT = (
     "Use read_note when the user asks to retrieve a saved note by name. "
     "If the question doesn't need a tool, answer directly. "
     "If a tool returns an error, explain it plainly."
+    "Use list_notes when the user asks which notes are available or cannot remember a note name. "
     "Use remember_fact only when the user explicitly asks you to remember a fact. "
     "Use recall_fact to look up previously saved facts when the user asks about them. "
     "Use the same key for saving and recalling. For the user's demo project name, "
@@ -132,6 +133,24 @@ def recall_fact(key: str) -> str:
 
     return row[0] if row else f"No saved fact found for {key!r}."
 
+@tool
+def list_notes() -> str:
+    """List saved note names when the user wants to discover available notes."""
+    try:
+        if not NOTES_DIR.exists():
+            return "No saved notes are available."
+
+        names = sorted(
+            path.stem.removeprefix("note-")
+            for path in NOTES_DIR.glob("note-*.txt")
+            if path.is_file()
+        )
+    except OSError:
+        return "Could not list the local notes."
+
+    return "\n".join(names) if names else "No saved notes are available."
+
+
 #TOOLS = [current_time, word_count, character_count, save_note, read_note]
 TOOLS = [
     current_time,
@@ -139,6 +158,7 @@ TOOLS = [
     character_count,
     save_note,
     read_note,
+    list_notes,
     remember_fact,
     recall_fact,
 ]
