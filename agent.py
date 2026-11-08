@@ -4,29 +4,52 @@ from langchain.agents import create_agent
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import InMemorySaver
+from langchain.agents.middleware import wrap_model_call, wrap_tool_call
+from langchain_core.messages import HumanMessage, ToolMessage
 
 import re
 from pathlib import Path
 import sqlite3
 
-CHAT_MODEL = "qwen3.5:4b"   # Ollama chat model. Must support tool calling.
+import os 
+
+CHAT_MODEL = os.environ.get("CHAT_MODEL", "llama3.2:3b")
 
 SYSTEM_PROMPT = (
     "You are a helpful local assistant. "
+    "Distinguish conversation history from explicitly saved information. "
+    "When the user states information without asking you to save it, "
+    "briefly acknowledge it and do not call a storage tool. "
+    "When asked what the user just said or mentioned earlier in this "
+    "conversation, answer from conversation history without using tools. "
+
     "Use current_time for requests about the current local date or time. "
     "Use word_count for word counts and character_count for character counts. "
     "Character counts include spaces and punctuation. "
-    "If the user asks for the length of text without specifying a unit, "
-    "ask whether they mean words or characters before calling a counting tool. "
+    "If a text-length request does not specify words or characters, "
+    "ask which unit the user means before calling a counting tool. "
+
     "Use save_note only when the user explicitly asks to save a note. "
-    "Use read_note when the user asks to retrieve a saved note by name. "
-    "If the question doesn't need a tool, answer directly. "
-    "If a tool returns an error, explain it plainly."
-    "Use list_notes when the user asks which notes are available or cannot remember a note name. "
-    "Use remember_fact only when the user explicitly asks you to remember a fact. "
-    "Use recall_fact to look up previously saved facts when the user asks about them. "
-    "Use the same key for saving and recalling. For the user's demo project name, "
-    "always use the key demo_project_name. "
+    "Note names must contain 1 to 40 letters, digits, hyphens, or underscores. "
+    "Use read_note only when the user asks to retrieve a saved note. "
+    "Use list_notes when the user asks which saved notes are available "
+    "or cannot remember a saved note name. "
+
+    "Use remember_fact only when the user explicitly asks you to remember "
+    "or persist a fact. "
+    "Use recall_fact when the user asks for an explicitly saved fact. "
+    "For the user's demo project name, always use demo_project_name "
+    "as the key for both saving and recalling. "
+
+    "If a tool returns an error, accurately describe that error. "
+    "Do not claim that saving or retrieval succeeded when it failed. "
+    "If no tool is needed, answer directly. "
+
+    "Saved-memory operations require these explicit request prefixes: "
+    "'Save a note:', 'Read note:', 'List saved notes', "
+    "'Remember this fact:', or 'Recall fact:'. "
+    "For other wording that requests persistent storage or retrieval, "
+    "explain the required prefix without claiming the operation succeeded. "
 )
 
 # ----- Tools -----
@@ -151,7 +174,6 @@ def list_notes() -> str:
     return "\n".join(names) if names else "No saved notes are available."
 
 
-#TOOLS = [current_time, word_count, character_count, save_note, read_note]
 TOOLS = [
     current_time,
     word_count,
@@ -162,6 +184,90 @@ TOOLS = [
     remember_fact,
     recall_fact,
 ]
+
+PERSISTENT_TOOLS = {
+    "save_note",
+    "read_note",
+    "list_notes",
+    "remember_fact",
+    "recall_fact",
+}
+
+# Deliberately narrow request syntax for this demo.
+MEMORY_REQUESTS = {
+    "save a note:": "save_note",
+    "read note:": "read_note",
+    "list saved notes": "list_notes",
+    "remember this fact:": "remember_fact",
+    "recall fact:": "recall_fact",
+}
+
+
+def allowed_tools_for_turn(state):
+    latest_text = ""
+    for message in reversed(state["messages"]):
+        if isinstance(message, HumanMessage):
+            if isinstance(message.content, str):
+                latest_text = message.content.strip().casefold()
+            break
+
+    # Ordinary conversation starts with no tools available.
+    allowed = set()
+
+    if re.match(
+        r"^(?:how many words\b|count (?:the )?words\b|word count\b)",
+        latest_text,
+    ):
+        allowed.add("word_count")
+
+    if re.match(
+        r"^(?:how many characters\b|count (?:the )?characters\b|"
+        r"character count\b)",
+        latest_text,
+    ):
+        allowed.add("character_count")
+
+    if re.match(
+        r"^(?:what(?:'s| is) (?:the )?(?:current |local )?"
+        r"(?:time|date)\b|what time is it\b|"
+        r"what(?:'s| is) today's date\b)",
+        latest_text,
+    ):
+        allowed.add("current_time")
+
+    for prefix, tool_name in MEMORY_REQUESTS.items():
+        if prefix == "list saved notes":
+            matches = latest_text.rstrip(".?!") == prefix
+        else:
+            matches = latest_text.startswith(prefix)
+
+        if matches:
+            allowed.add(tool_name)
+            break
+
+    return allowed
+
+@wrap_model_call
+def select_turn_tools(request, handler):
+    allowed = allowed_tools_for_turn(request.state)
+    selected = [item for item in TOOLS if item.name in allowed]
+    return handler(request.override(tools=selected))
+
+
+@wrap_tool_call
+def enforce_turn_tools(request, handler):
+    call = request.tool_call
+    if call["name"] not in allowed_tools_for_turn(request.state):
+        return ToolMessage(
+            content=(
+                "Blocked: this tool is not enabled for the current request. "
+                "Use conversation history to answer when appropriate. "
+                "No tool action was performed."
+            ),
+            tool_call_id=call["id"],
+            name=call["name"],
+        )
+    return handler(request)
 # ----- Agent -----
 
 def build_agent():
@@ -176,6 +282,7 @@ def build_agent():
         tools=TOOLS,
         system_prompt=SYSTEM_PROMPT,
         checkpointer=checkpointer,
+	middleware=[select_turn_tools, enforce_turn_tools],
     )
 
 
@@ -204,12 +311,15 @@ def main():
         # Only look at messages added during this turn, not the full history.
         new_messages = result["messages"][prev_message_count:]
 
-        # Print any tool calls made in this turn.
+        # Print tool calls and their actual results.
         for msg in new_messages:
             tool_calls = getattr(msg, "tool_calls", None)
             if tool_calls:
                 for call in tool_calls:
                     print(f"[tool call] {call['name']}({call['args']})")
+
+            if getattr(msg, "type", None) == "tool":
+                print(f"[tool result] {msg.content}")
 
         print(f"\nAnswer: {result['messages'][-1].content}\n")
 
