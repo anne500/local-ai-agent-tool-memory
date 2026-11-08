@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 import sqlite3
 
-import os 
+import os
 
 CHAT_MODEL = os.environ.get("CHAT_MODEL", "llama3.2:3b")
 
