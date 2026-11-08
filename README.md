@@ -1,4 +1,4 @@
-﻿# 🤖 Local AI Agent with Tool Calling and Memory
+# 🤖 Local AI Agent with Tool Calling and Memory
 
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-Local%20Inference-222222)
@@ -73,7 +73,9 @@ Type `exit` to end a session.
 
 The verified development environment used Windows, Python 3.14.4,
 and Ollama 0.40.5. `requirements.txt` records installed package versions.
-Installation in a fresh environment has not yet been verified.
+A fresh GitHub checkout and virtual environment on the development Windows
+machine passed dependency installation, `pip check`, compilation, and agent
+construction. This check did not exercise inference or a new Ollama installation.
 
 ## 💬 Supported requests
 
@@ -156,6 +158,36 @@ You: Recall fact: my demo project name.
 [tool result] Local Agent Memory Lab
 ```
 
+## ✅ Tutorial completion and reproducible checks
+
+The tutorial baseline and selected extensions are complete. This checkpoint
+includes eight tools, session history, persistent notes and facts, model
+configuration, tool-result logging, and explicit per-turn tool access.
+
+Four execution-guard scenarios passed in the Windows development environment:
+ordinary statements cannot save notes, explicit saves reach a fake handler,
+previous-turn permission expires, and fact retrieval cannot enable fact writes.
+These checks use a fake handler and do not invoke a model or write personal data.
+
+The repository now preserves these checks alongside routing and temporary-storage
+tests, including note discovery, duplicate-save protection, invalid names, and
+fact updates. Run them from the repository root after installing dependencies:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+Eight automated test methods passed during closeout on Linux with Python 3.12.14
+and the pinned requirements. Storage tests use temporary directories and databases.
+This is additional offline coverage, not a substitute for the Windows manual
+agent demonstrations or a model-quality benchmark.
+
+See [verification details](docs/verification.md) for evidence boundaries,
+reproduction instructions, extension coverage, and deferred work.
+
+The next evaluation tutorial is a separate learning milestone. No evaluation
+harness or LLM-judge results are included in this completion claim.
+
 ## 🧠 Memory and storage
 
 | Storage | Lifetime | Behavior |
@@ -192,10 +224,10 @@ systematically evaluated against the final middleware implementation.
 
 ## 📋 Scope and limitations
 
-- Evidence consists of manual functional checks, not a benchmark.
+- Evidence combines manual agent checks and offline automated checks, not a benchmark.
 - Narrow request patterns restrict supported phrasing and combined requests.
 - Middleware controls tool availability; model-selected arguments can still be wrong.
-- The execution guard's rejection path has not yet been directly tested.
+- Guard checks exercise middleware directly; they do not simulate every full-agent failure path.
 - Final responses can be vague or misinterpret tool results.
 - Character counting measures Unicode code points, not visual grapheme clusters.
 - The CLI uses one conversation thread and shared local storage.
@@ -211,3 +243,4 @@ The tutorial baseline introduced time and word-count tools with session memory.
 This project adds character counting, note storage and discovery, SQLite facts,
 model selection through an environment variable, tool-result logging, and
 request-specific tool access.
+

@@ -185,14 +185,6 @@ TOOLS = [
     recall_fact,
 ]
 
-PERSISTENT_TOOLS = {
-    "save_note",
-    "read_note",
-    "list_notes",
-    "remember_fact",
-    "recall_fact",
-}
-
 # Deliberately narrow request syntax for this demo.
 MEMORY_REQUESTS = {
     "save a note:": "save_note",
@@ -282,7 +274,7 @@ def build_agent():
         tools=TOOLS,
         system_prompt=SYSTEM_PROMPT,
         checkpointer=checkpointer,
-	middleware=[select_turn_tools, enforce_turn_tools],
+        middleware=[select_turn_tools, enforce_turn_tools],
     )
 
 
