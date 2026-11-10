@@ -1,5 +1,15 @@
 # 🤖 Local AI Agent with Tool Calling and Memory
 
+![Project overview and reading map](assets/readme-overview.svg)
+
+**🟦 Learn AI · 🟩 Portfolio evidence · 🟪 PhD research · 🟠 Planned work**
+
+<a id="explore-the-project"></a>
+
+## 🧭 Explore the project
+
+[🧩 Architecture](#architecture) · [🚀 Setup](#windows-powershell-setup) · [🧪 Results & verification](#tutorial-completion-and-reproducible-checks) · [🗂️ Evidence & guides](#verified-manual-demonstrations) · [🎨 Visual standard](VISUAL_STYLE.md)
+
 🎨 [Shared architecture colors and diagram conventions](VISUAL_STYLE.md)
 
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
@@ -23,7 +33,9 @@ note discovery, character counting, durable facts, and tool-access middleware.
 | Persistent memory | Text files and SQLite | Saved information across restarts |
 | Tool access | Selection and execution middleware | Request-specific tool availability |
 
-## 🧭 Architecture
+<a id="architecture"></a>
+
+## 🧩 Architecture
 
 ```mermaid
 flowchart TD
@@ -53,6 +65,8 @@ flowchart TD
     class O output;
 ```
 
+<a id="features"></a>
+
 ## ✨ Features
 
 | Capability | Implementation |
@@ -67,6 +81,8 @@ flowchart TD
 | Persistent facts | remember_fact and recall_fact |
 | Tool access | select_turn_tools and enforce_turn_tools |
 | CLI visibility | Tool calls, tool results, and final answers |
+
+<a id="windows-powershell-setup"></a>
 
 ## 🚀 Windows PowerShell setup
 
@@ -93,6 +109,8 @@ A fresh GitHub checkout and virtual environment on the development Windows
 machine passed dependency installation, `pip check`, compilation, and agent
 construction. This check did not exercise inference or a new Ollama installation.
 
+<a id="supported-requests"></a>
+
 ## 💬 Supported requests
 
 Routing uses explicit prefixes and regular expressions. It does not provide
@@ -118,9 +136,13 @@ ask whether the user means words or characters. After clarification, use a
 complete supported request, such as `How many characters are in "Cedar CI!"?`.
 A reply such as `Characters, please.` does not enable a tool by itself.
 
+<a id="verified-manual-demonstrations"></a>
+
 ## 🧪 Verified manual demonstrations
 
-### Conversation history without tools
+<a id="conversation-history-without-tools"></a>
+
+### 💬 Conversation history without tools
 
 ```text
 You: My practice release label is copper-91.
@@ -133,7 +155,9 @@ Answer: You mentioned that your practice release label is copper-91.
 
 Neither turn produced a tool call.
 
-### Character counting
+<a id="character-counting"></a>
+
+### 🔢 Character counting
 
 ```text
 You: How many characters are in "copper-91"?
@@ -146,7 +170,9 @@ Answer: There are 9 characters in the text "copper-91".
 Word counting also returned 3 for `build release integration` in an
 earlier Llama agent run, before the final routing revision.
 
-### Explicit note saving and retrieval
+<a id="explicit-note-saving-and-retrieval"></a>
+
+### 💾 Explicit note saving and retrieval
 
 ```text
 You: Save a note: name routing_check_01, text Tool access is controlled by middleware.
@@ -161,7 +187,9 @@ You: Read note: routing_check_01
 The operations succeeded. The model's final responses did not clearly
 confirm the save or attribute the retrieved text to the note file.
 
-### Facts across process restarts
+<a id="facts-across-process-restarts"></a>
+
+### 💾 Facts across process restarts
 
 The agent saved `Local Agent Memory Lab` under `demo_project_name`.
 After exiting and restarting, `recall_fact` retrieved that value.
@@ -174,7 +202,9 @@ You: Recall fact: my demo project name.
 [tool result] Local Agent Memory Lab
 ```
 
-## ✅ Tutorial completion and reproducible checks
+<a id="tutorial-completion-and-reproducible-checks"></a>
+
+## 🧪 Tutorial completion and reproducible checks
 
 The tutorial baseline and selected extensions are complete. This checkpoint
 includes eight tools, session history, persistent notes and facts, model
@@ -204,7 +234,9 @@ reproduction instructions, extension coverage, and deferred work.
 The next evaluation tutorial is a separate learning milestone. No evaluation
 harness or LLM-judge results are included in this completion claim.
 
-## 🧠 Memory and storage
+<a id="memory-and-storage"></a>
+
+## 💾 Memory and storage
 
 | Storage | Lifetime | Behavior |
 | --- | --- | --- |
@@ -220,6 +252,8 @@ The prompt specifies `demo_project_name` for the demo project name.
 
 The virtual environment, Python cache, notes, SQLite database files, and
 agent backup are excluded by `.gitignore`.
+
+<a id="model-troubleshooting-evidence"></a>
 
 ## 🔬 Model troubleshooting evidence
 
@@ -238,7 +272,9 @@ general model ranking or isolate a specific Ollama defect.
 Llama is the working default. Other installed models have not been
 systematically evaluated against the final middleware implementation.
 
-## 📋 Scope and limitations
+<a id="scope-and-limitations"></a>
+
+## ⚠️ Scope and limitations
 
 - Evidence combines manual agent checks and offline automated checks, not a benchmark.
 - Narrow request patterns restrict supported phrasing and combined requests.
@@ -249,6 +285,8 @@ systematically evaluated against the final middleware implementation.
 - The CLI uses one conversation thread and shared local storage.
 - The CLI does not yet handle invocation failures or recursion-limit errors gracefully.
 - Public multi-user hosting, authentication, and broader model evaluation are future work.
+
+<a id="tutorial-and-attribution"></a>
 
 ## 📚 Tutorial and attribution
 
