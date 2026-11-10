@@ -12,6 +12,9 @@
 
 🎨 [Shared architecture colors and diagram conventions](VISUAL_STYLE.md)
 
+> **📚 Tutorial foundation:** This learning project is based on [Darsh Shah's freeCodeCamp tutorial](https://www.freecodecamp.org/news/how-to-build-your-own-local-ai-agent-with-tool-calling-and-memory/). See [Tutorial Acknowledgment and Attribution](#tutorial-acknowledgment-and-attribution) for the original source and the repository's extensions.
+
+
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-Local%20Inference-222222)
 ![Llama](https://img.shields.io/badge/Llama-3.2%203B-7C3AED)
@@ -288,7 +291,24 @@ systematically evaluated against the final middleware implementation.
 
 <a id="tutorial-and-attribution"></a>
 
-## 📚 Tutorial and attribution
+<a id="tutorial-acknowledgment-and-attribution"></a>
+
+## 📚 Tutorial Acknowledgment and Attribution
+
+We acknowledge **Darsh Shah** as the author of the foundational tutorial published by **freeCodeCamp**:
+
+**[How to Build Your Own Local AI Agent with Tool Calling and Memory](https://www.freecodecamp.org/news/how-to-build-your-own-local-ai-agent-with-tool-calling-and-memory/)**  
+Published: July 7, 2026.
+
+| Credit and provenance | Description |
+| --- | --- |
+| 👨‍🏫 Original author | Darsh Shah |
+| 📚 Publisher | freeCodeCamp |
+| 🧱 Tutorial foundation | A local tool-calling agent with time and word-count tools and conversational memory. |
+| 🛠️ Repository adaptations and extensions | Character counting, note storage and discovery, SQLite fact memory, model configuration, per-turn tool-access middleware, logging, and verification. |
+
+The tutorial is credited for the original learning foundation. Repository-specific adaptations, experiments, verification records, and research connections are documented separately in the project documentation.
+
 
 Starting point: Darsh Shah's freeCodeCamp tutorial,
 [How to Build Your Own Local AI Agent with Tool Calling and Memory](https://www.freecodecamp.org/news/how-to-build-your-own-local-ai-agent-with-tool-calling-and-memory/).
