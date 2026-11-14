@@ -36,6 +36,21 @@ note discovery, character counting, durable facts, and tool-access middleware.
 | Persistent memory | Text files and SQLite | Saved information across restarts |
 | Tool access | Selection and execution middleware | Request-specific tool availability |
 
+## 🟦 Base tutorial
+
+The working tutorial builds a local LangChain and Ollama agent with time and word-count tools and conversation history within a thread. The article discusses long-term memory as a next step. [Darsh Shah’s freeCodeCamp tutorial: How to Build Your Own Local AI Agent with Tool Calling and Memory](https://www.freecodecamp.org/news/how-to-build-your-own-local-ai-agent-with-tool-calling-and-memory/)
+
+## 🧩 Extensions added in Project 2
+
+| Extension | What this project added |
+| --- | --- |
+| **Additional tools** | Added character counting and text-file note saving, reading, and discovery. |
+| **Durable fact memory** | Implemented explicit SQLite fact storage and recall across process restarts. |
+| **Tool access and diagnostics** | Added per-turn tool selection and execution checks, model configuration, and tool-result logging. |
+| **Verification** | Recorded Windows demonstrations and added offline checks for routing, access control, and storage. |
+
+See [verified demonstrations](#verified-manual-demonstrations) and [reproducible checks](#tutorial-completion-and-reproducible-checks).
+
 <a id="architecture"></a>
 
 ## 🧩 Architecture
